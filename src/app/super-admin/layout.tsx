@@ -28,12 +28,18 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null)
   const supabase = createClient()
 
+  const SUPER_ADMIN_EMAIL = 'jadielalves54@gmail.com'
+
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       const { data } = await supabase.from('profiles').select('full_name, email, role').eq('id', user.id).single()
-      if (!data || data.role !== 'super_admin') { router.push('/painel'); return }
+      // Proteção dupla: role super_admin E email autorizado
+      if (!data || data.role !== 'super_admin' || data.email !== SUPER_ADMIN_EMAIL) {
+        router.push('/painel')
+        return
+      }
       setProfile(data)
     }
     loadProfile()
